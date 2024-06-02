@@ -1,13 +1,18 @@
 const express = require('express')
 const app = express()
 require('dotenv').config()
+const cors = require('cors')
 const port = process.env.PORT || 5000;
+
+
+// middlewares
+app.use(cors())
+app.use(express.json())
 
 
 app.get('/', (req, res) => {
     res.send('Welcome to the TutorGalaxy')
 })
-
 
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -29,9 +34,16 @@ async function run() {
 
         // user related APIs -----------
         // save user in db
-        app.post('/user', async (req, res) => {
+        app.post('/users', async (req, res) => {
             const user = req.body;
-            console.log(user)
+            // checking: does the user already exist in the db?
+            const query = { email: user?.email }
+            const isExist = await userColl.findOne(query)
+            if (isExist) {
+                return res.send({ exist: true })
+            }
+            const result = await userColl.insertOne({ ...user, timeStamp: Date.now() })
+            res.send({ result, isExist })
         })
 
 

@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
 })
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.jt5df8u.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -31,6 +31,7 @@ async function run() {
     try {
         const database = client.db('study_platform_db');
         const userColl = database.collection('users');
+        const studySessionColl = database.collection('study-sessions')
 
         // user related APIs -----------
         // save user in db
@@ -46,6 +47,40 @@ async function run() {
             res.send({ result, isExist })
         })
 
+        // public APIs + session APIs + others
+        // get study sessions 
+        app.get('/study-sessions', async (req, res) => {
+            const result = await studySessionColl.find().toArray()
+            res.send(result)
+        })
+        app.get('/study-sessions/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await studySessionColl.findOne(query)
+            res.send(result)
+        })
+        app.get('/users/role/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const result = await userColl.findOne(query)
+            res.send(result)
+        })
+
+        // tutor related APIs -----------
+        // create study session
+        app.get('/study-sessions/tutor/:email', async (req, res) => {
+            const email = req.params?.email;
+            const query = { tutor_email: email }
+            const result = await studySessionColl.find(query).toArray()
+            res.send(result)
+        })
+        app.post('/study-sessions', async (req, res) => {
+            const sessionInfo = req.body;
+            const result = await studySessionColl.insertOne(sessionInfo)
+            res.send(result)
+        })
+
+        studySessionColl.updateMany({ tutor_name: 'mahimbabu@gmail.com' }, { $set: { tutor_email: 'mahimbabu@gmail.com', tutor_name: 'Mahim' } })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });

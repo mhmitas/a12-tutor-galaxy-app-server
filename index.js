@@ -34,6 +34,7 @@ async function run() {
         const studySessionColl = database.collection('study-sessions')
         const materialColl = database.collection('materials')
         const bookingColl = database.collection('bookings')
+        const reviewColl = database.collection('reviews')
 
         // user related APIs -----------
         // save user in db
@@ -97,6 +98,22 @@ async function run() {
             const result = await bookingColl.find(query, options).toArray()
             const ids = result.map(item => item.sessionId)
             res.send(ids)
+        })
+        // post review in db
+        app.put('/reviews', async (req, res) => {
+            const review = req.body;
+            const query = { sessionId: review.sessionId, userEmail: review.userEmail }
+            const updateDoc = { $set: { ...review } }
+            const options = { upsert: true }
+            const result = await reviewColl.updateOne(query, updateDoc, options);
+            res.send(result)
+        })
+        // get all reviews
+        app.get('/reviews/:sessionId', async (req, res) => {
+            const sessionId = req.params.sessionId;
+            const query = { sessionId: sessionId }
+            const result = await reviewColl.find(query).toArray()
+            res.send(result)
         })
 
         // tutor related APIs -----------

@@ -33,6 +33,7 @@ async function run() {
         const userColl = database.collection('users');
         const studySessionColl = database.collection('study-sessions')
         const materialColl = database.collection('materials')
+        const bookingColl = database.collection('bookings')
 
         // user related APIs -----------
         // save user in db
@@ -70,6 +71,25 @@ async function run() {
             const query = { email: email }
             const result = await userColl.findOne(query)
             res.send(result)
+        })
+
+        // student related APIs------------
+        // book a session
+        app.post('/bookings', async (req, res) => {
+            const sessionData = req.body;
+            const result = await bookingColl.insertOne(sessionData)
+            res.send(result)
+        })
+        // get booked sessions ids
+        app.get('/bookings/session-ids/:email', async (req, res) => {
+            const email = req.params?.email;
+            const query = { userEmail: email };
+            const options = {
+                projection: { _id: 0, sessionId: 1 }
+            }
+            const result = await bookingColl.find(query, options).toArray()
+            const ids = result.map(item => item.sessionId)
+            res.send(ids)
         })
 
         // tutor related APIs -----------

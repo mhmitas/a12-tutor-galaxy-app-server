@@ -96,6 +96,12 @@ async function run() {
             const result = await materialColl.find(query).toArray()
             res.send(result)
         })
+        // delete a material from material coll.
+        app.delete('/materials/delete/:id', async (req, res) => {
+            const id = req.params.id
+            const result = await materialColl.deleteOne({ _id: new ObjectId(id) })
+            res.send(result)
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });

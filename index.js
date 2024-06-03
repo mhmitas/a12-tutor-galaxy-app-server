@@ -32,6 +32,7 @@ async function run() {
         const database = client.db('study_platform_db');
         const userColl = database.collection('users');
         const studySessionColl = database.collection('study-sessions')
+        const materialColl = database.collection('materials')
 
         // user related APIs -----------
         // save user in db
@@ -70,7 +71,10 @@ async function run() {
         // create study session
         app.get('/study-sessions/tutor/:email', async (req, res) => {
             const email = req.params?.email;
-            const query = { tutor_email: email }
+            let query = { tutor_email: email }
+            if (req.query.status) {
+                query = { ...query, status: req.query.status }
+            }
             const result = await studySessionColl.find(query).toArray()
             res.send(result)
         })
@@ -79,8 +83,12 @@ async function run() {
             const result = await studySessionColl.insertOne(sessionInfo)
             res.send(result)
         })
-
-        studySessionColl.updateMany({ tutor_name: 'mahimbabu@gmail.com' }, { $set: { tutor_email: 'mahimbabu@gmail.com', tutor_name: 'Mahim' } })
+        // upload study materials
+        app.post('/materials', async (req, res) => {
+            const materials = req.body
+            const result = await materialColl.insertOne(materials)
+            res.send(result)
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });

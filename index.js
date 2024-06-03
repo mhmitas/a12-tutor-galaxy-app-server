@@ -96,6 +96,15 @@ async function run() {
             const result = await materialColl.find(query).toArray()
             res.send(result)
         })
+        // update a material in material coll.
+        app.patch('/materials/update/:id', async (req, res) => {
+            const id = req.params.id;
+            const material = req.body;
+            const filter = { _id: new ObjectId(id) }
+            const updateDoc = { $set: { ...material } }
+            const result = await materialColl.updateOne(filter, updateDoc)
+            res.send(result)
+        })
         // delete a material from material coll.
         app.delete('/materials/delete/:id', async (req, res) => {
             const id = req.params.id

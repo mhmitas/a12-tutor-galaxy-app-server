@@ -51,7 +51,12 @@ async function run() {
         // public APIs + session APIs + others
         // get study sessions 
         app.get('/study-sessions', async (req, res) => {
-            const result = await studySessionColl.find().toArray()
+            let query = {};
+            if (req.query.limit) {
+                limit = parseInt(req.query.limit)
+                console.log(limit)
+            }
+            const result = await studySessionColl.find().limit(limit).toArray()
             res.send(result)
         })
         app.get('/study-sessions/:id', async (req, res) => {
@@ -89,6 +94,12 @@ async function run() {
             const query = { _id: new ObjectId(id) }
             const updateDoc = { $set: { ...updateSession } }
             const result = await studySessionColl.updateOne(query, updateDoc)
+            res.send(result)
+        })
+        // delete a session from session coll.
+        app.delete('/study-sessions/delete/:id', async (req, res) => {
+            const id = req.params.id
+            const result = await studySessionColl.deleteOne({ _id: new ObjectId(id) })
             res.send(result)
         })
         // upload study materials

@@ -289,6 +289,15 @@ async function run() {
             const result = await studySessionColl.find().sort(sort).limit(limit).toArray()
             res.send(result)
         })
+        // set registration fee and update status
+        app.patch('/study-sessions/update-by-admin/:id', async (req, res) => {
+            const id = req.params.id;
+            const updateSession = req.body;
+            const query = { _id: new ObjectId(id) }
+            const updateDoc = { $set: { ...updateSession } }
+            const result = await studySessionColl.updateOne(query, updateDoc)
+            res.send(result)
+        })
 
         // jwt related APIs
         // generate token when auth stage change

@@ -7,7 +7,9 @@ const port = process.env.PORT || 5000;
 
 
 // middlewares
-app.use(cors())
+app.use(cors({
+    origin: ['http://localhost:5173']
+}))
 app.use(express.json())
 
 
@@ -54,7 +56,7 @@ async function run() {
         const reviewColl = database.collection('reviews')
         const noteColl = database.collection('notes')
 
-        // role verify middlewares
+        // role verify middlewares:-----------
         // verify tutor middleware
         async function verifyTutor(req, res, next) {
             const tutorEmail = req?.user?.email
@@ -103,11 +105,12 @@ async function run() {
             res.send({ result, isExist })
         })
 
-        // public APIs + session APIs + others
+        // public APIs + session APIs + others----------
         // get study sessions 
         app.get('/study-sessions', async (req, res) => {
-            let query = {};
-            if (req.query.limit) {
+            // let query = {};
+            let limit = 0
+            if (req.query?.limit) {
                 limit = parseInt(req.query.limit)
                 // console.log(limit)
             }
@@ -284,6 +287,7 @@ async function run() {
             res.send({ token })
         })
 
+        // MUST REMOVE BEFORE DEPLOY
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");

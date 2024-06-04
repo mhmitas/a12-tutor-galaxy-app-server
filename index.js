@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 require('dotenv').config()
 const cors = require('cors')
+const jwt = require('jsonwebtoken')
 const port = process.env.PORT || 5000;
 
 
@@ -26,6 +27,21 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+
+function verifyToken(req, res, next) {
+    const token = req.headers?.authorization.split(' ')[1]
+    if (!token) {
+        return res.status(401).send({ message: 'unauthorize access' })
+    }
+    jwt.verify(token, process.env.JWT_SECRET, function (err, decoded) {
+        if (err) {
+            console.log(err)
+            return res.status(403).send({ message: 'forbidden access' })
+        }
+        req.user = decoded;
+        next()
+    })
+}
 
 async function run() {
     try {
@@ -166,7 +182,7 @@ async function run() {
 
         // tutor related APIs -----------
         // create study session
-        app.get('/study-sessions/tutor/:email', async (req, res) => {
+        app.get('/study-sessions/tutor/:email', verifyToken, async (req, res) => {
             const email = req.params?.email;
             let query = { tutor_email: email }
             if (req.query.status) {
@@ -221,6 +237,15 @@ async function run() {
             const id = req.params.id
             const result = await materialColl.deleteOne({ _id: new ObjectId(id) })
             res.send(result)
+        })
+
+        // jwt related APIs
+        // generate token when auth stage change
+        app.post('/jwt', async (req, res) => {
+            const user = req.body
+            const secret = process.env.JWT_SECRET
+            const token = jwt.sign(user, secret, { expiresIn: '1h' })
+            res.send({ token })
         })
 
         // Send a ping to confirm a successful connection

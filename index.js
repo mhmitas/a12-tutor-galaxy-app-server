@@ -116,11 +116,19 @@ async function run() {
             const result = await reviewColl.find(query).toArray()
             res.send(result)
         })
-        // get note from db
+        // get notes from db
         app.get('/notes/:email', async (req, res) => {
             const email = req.params.email;
             const query = { userEmail: email }
             const result = await noteColl.find(query).toArray()
+            res.send(result)
+        })
+        // get a note for update
+        app.get('/notes/detail/:id', async (req, res) => {
+            const id = req.params?.id;
+            console.log(id)
+            const query = { _id: new ObjectId(id) }
+            const result = await noteColl.findOne(query);
             res.send(result)
         })
         // save note in db
@@ -129,6 +137,17 @@ async function run() {
             const result = await noteColl.insertOne(note)
             res.send(result)
         })
+        // update a note
+        app.patch('/notes/update/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id)
+            const updateNote = req.body;
+            const query = { _id: new ObjectId(id) }
+            const updateDoc = { $set: { ...updateNote } }
+            const result = await noteColl.updateOne(query, updateDoc)
+            res.send(result)
+        })
+        // delete a note
         app.delete('/notes/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }

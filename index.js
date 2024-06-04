@@ -120,7 +120,8 @@ async function run() {
         app.get('/notes/:email', async (req, res) => {
             const email = req.params.email;
             const query = { userEmail: email }
-            const result = await noteColl.find(query).toArray()
+            const sort = { _id: -1 }
+            const result = await noteColl.find(query).sort(sort).toArray()
             res.send(result)
         })
         // get a note for update

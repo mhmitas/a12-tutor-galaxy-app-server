@@ -35,6 +35,7 @@ async function run() {
         const materialColl = database.collection('materials')
         const bookingColl = database.collection('bookings')
         const reviewColl = database.collection('reviews')
+        const noteColl = database.collection('notes')
 
         // user related APIs -----------
         // save user in db
@@ -56,7 +57,7 @@ async function run() {
             let query = {};
             if (req.query.limit) {
                 limit = parseInt(req.query.limit)
-                console.log(limit)
+                // console.log(limit)
             }
             const result = await studySessionColl.find().limit(limit).toArray()
             res.send(result)
@@ -74,7 +75,7 @@ async function run() {
             res.send(result)
         })
 
-        // student related APIs------------
+        // student related APIs ------------
         // book a session
         app.post('/bookings', async (req, res) => {
             const sessionData = req.body;
@@ -115,6 +116,13 @@ async function run() {
             const result = await reviewColl.find(query).toArray()
             res.send(result)
         })
+        // save note in db
+        app.post('/notes', async (req, res) => {
+            const note = req.body
+            const result = await noteColl.insertOne(note)
+            res.send(result)
+        })
+
 
         // tutor related APIs -----------
         // create study session

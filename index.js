@@ -116,10 +116,23 @@ async function run() {
             const result = await reviewColl.find(query).toArray()
             res.send(result)
         })
+        // get note from db
+        app.get('/notes/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { userEmail: email }
+            const result = await noteColl.find(query).toArray()
+            res.send(result)
+        })
         // save note in db
         app.post('/notes', async (req, res) => {
             const note = req.body
             const result = await noteColl.insertOne(note)
+            res.send(result)
+        })
+        app.delete('/notes/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await noteColl.deleteOne(query)
             res.send(result)
         })
 

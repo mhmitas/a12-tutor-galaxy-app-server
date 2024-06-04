@@ -28,6 +28,7 @@ const client = new MongoClient(uri, {
     }
 });
 
+// verify token middleware
 function verifyToken(req, res, next) {
     const token = req.headers?.authorization.split(' ')[1]
     if (!token) {
@@ -52,6 +53,41 @@ async function run() {
         const bookingColl = database.collection('bookings')
         const reviewColl = database.collection('reviews')
         const noteColl = database.collection('notes')
+
+        // role verify middlewares
+        // verify tutor middleware
+        async function verifyTutor(req, res, next) {
+            const tutorEmail = req?.user?.email
+            const query = { email: tutorEmail }
+            const result = await userColl.findOne(query)
+            if (result && result.role === 'tutor') {
+                return next()
+            } else {
+                return res.status(401).send({ message: 'Unauthorized access' })
+            }
+        }
+        // verify student middleware
+        async function verifyStudent(req, res, next) {
+            const studentEmail = req?.user?.email;
+            const query = { email: studentEmail }
+            const result = await userColl.findOne(query)
+            if (result && result.role === 'student') {
+                return next()
+            } else {
+                return res.status(401).send({ message: 'Unauthorized access | you are not student' })
+            }
+        }
+        // verify admin middleware
+        async function verifyAdmin(req, res, next) {
+            const adminEmail = req?.user?.email;
+            const query = { email: adminEmail }
+            const result = await userColl.findOne(query)
+            if (result && result.role === 'admin') {
+                return next()
+            } else {
+                return res.status(401).send({ message: 'Unauthorized access | you are not admin' })
+            }
+        }
 
         // user related APIs -----------
         // save user in db
@@ -149,7 +185,7 @@ async function run() {
             res.send(result)
         })
         // save note in db
-        app.post('/notes', async (req, res) => {
+        app.post('/notes', verifyToken, verifyStudent, async (req, res) => {
             const note = req.body
             const result = await noteColl.insertOne(note)
             res.send(result)
@@ -182,7 +218,7 @@ async function run() {
 
         // tutor related APIs -----------
         // create study session
-        app.get('/study-sessions/tutor/:email', verifyToken, async (req, res) => {
+        app.get('/study-sessions/tutor/:email', verifyToken, verifyTutor, async (req, res) => {
             const email = req.params?.email;
             let query = { tutor_email: email }
             if (req.query.status) {

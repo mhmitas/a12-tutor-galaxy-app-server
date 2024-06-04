@@ -111,13 +111,13 @@ async function run() {
             // let query = {};
             let limit = 0
             if (req.query?.limit) {
-                limit = parseInt(req.query.limit)
-                // console.log(limit)
+                limit = parseInt(req.query.limit);
             }
-            const result = await studySessionColl.find().limit(limit).toArray()
+            let sort = { _id: 1 }
+            const result = await studySessionColl.find().sort(sort).limit(limit).toArray()
             res.send(result)
         })
-        app.get('/study-sessions/:id', async (req, res) => {
+        app.get('/study-sessions/detail/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await studySessionColl.findOne(query)
@@ -275,6 +275,18 @@ async function run() {
         app.delete('/materials/delete/:id', async (req, res) => {
             const id = req.params.id
             const result = await materialColl.deleteOne({ _id: new ObjectId(id) })
+            res.send(result)
+        })
+
+        // Admin related APIs
+        // get all study session from db
+        app.get('/all-sessions', async (req, res) => {
+            let limit = 0
+            let sort = { _id: 1 }
+            if (req.query?.limit) {
+                limit = parseInt(req.query.limit);
+            }
+            const result = await studySessionColl.find().sort(sort).limit(limit).toArray()
             res.send(result)
         })
 

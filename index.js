@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000;
 
 // middlewares
 app.use(cors({
-    origin: ['http://localhost:5173']
+    origin: ['http://localhost:5173', 'https://tutor-galaxy.web.app', 'https://tutor-galaxy.firebaseapp.com']
 }))
 app.use(express.json())
 

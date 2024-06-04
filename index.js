@@ -155,6 +155,13 @@ async function run() {
             const result = await noteColl.deleteOne(query)
             res.send(result)
         })
+        // get a sessions material by student
+        app.get('/materials/session/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { sessionId: id }
+            const result = await materialColl.find(query).toArray()
+            res.send(result)
+        })
 
 
         // tutor related APIs -----------

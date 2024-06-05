@@ -345,6 +345,15 @@ async function run() {
             const result = await userColl.find().toArray()
             res.send(result)
         })
+        // update a user's role
+        app.patch('/users/update-role/:id', async (req, res) => {
+            const id = req.params.id
+            const updateUser = req.body;
+            const query = { _id: new ObjectId(id) }
+            const updateDoc = { $set: { ...updateUser } }
+            const result = await userColl.updateOne(query, updateDoc)
+            res.send(result)
+        })
 
         // jwt related APIs
         // generate token when auth stage change

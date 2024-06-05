@@ -324,6 +324,13 @@ async function run() {
             const result = await materialColl.find().toArray()
             res.send(result)
         })
+        // delete materials by admin
+        app.delete('/material/delete-by-admin/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await materialColl.deleteOne(query)
+            res.send(result)
+        })
 
         // jwt related APIs
         // generate token when auth stage change

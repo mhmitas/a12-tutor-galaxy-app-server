@@ -246,8 +246,13 @@ async function run() {
         })
         // delete a session from session coll.
         app.delete('/study-sessions/delete/:id', async (req, res) => {
-            const id = req.params.id
-            const result = await studySessionColl.deleteOne({ _id: new ObjectId(id) })
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const checkResult = await studySessionColl.findOne(query, { projection: { status: 1 } })
+            if (checkResult.status === 'approved') {
+                return res.status(405).send({ message: 'Method Not Allowed' })
+            }
+            const result = await studySessionColl.deleteOne(query)
             res.send(result)
         })
         // upload study materials
@@ -301,6 +306,17 @@ async function run() {
             const query = { _id: new ObjectId(id) }
             const updateDoc = { $set: { ...updateSession } }
             const result = await studySessionColl.updateOne(query, updateDoc)
+            res.send(result)
+        })
+        // delete an approved session by admin
+        app.delete('/study-sessions/delete-by-admin/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const checkResult = await studySessionColl.findOne(query, { projection: { status: 1 } })
+            if (checkResult.status !== 'approved') {
+                return res.status(405).send({ message: 'Method Not Allowed' })
+            }
+            const result = await studySessionColl.deleteOne(query)
             res.send(result)
         })
 

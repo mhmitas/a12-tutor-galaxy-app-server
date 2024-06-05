@@ -235,11 +235,12 @@ async function run() {
             const result = await studySessionColl.insertOne(sessionInfo)
             res.send(result)
         })
+        // update rejected session status 
         app.patch('/study-sessions/update/:id', async (req, res) => {
             const id = req.params.id;
             const updateSession = req.body;
             const query = { _id: new ObjectId(id) }
-            const updateDoc = { $set: { ...updateSession } }
+            const updateDoc = { $set: { ...updateSession }, $unset: { rejection_info: '' } }
             const result = await studySessionColl.updateOne(query, updateDoc)
             res.send(result)
         })

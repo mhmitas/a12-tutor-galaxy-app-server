@@ -319,6 +319,15 @@ async function run() {
             const result = await studySessionColl.deleteOne(query)
             res.send(result)
         })
+        // update an approved session by admin
+        app.patch('/study-session/update-by-admin/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const updateSession = req.body;
+            const updateDoc = { $set: { ...updateSession } }
+            const result = await studySessionColl.updateOne(query, updateDoc)
+            res.send(result)
+        })
         // get all materials from material collection
         app.get('/all-materials', async (req, res) => {
             const result = await materialColl.find().toArray()

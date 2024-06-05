@@ -110,12 +110,16 @@ async function run() {
         app.get('/study-sessions', async (req, res) => {
             // let query = {};
             let limit = 0
+            let query = {}
+            let sort = { _id: -1 }
             if (req.query?.limit) {
                 limit = parseInt(req.query.limit);
             }
-            let sort = { _id: 1 }
-            const result = await studySessionColl.find().sort(sort).limit(limit).toArray()
-            res.send(result)
+            if (req.query?.status) {
+                query = { status: req.query.status }
+            }
+            const result = await studySessionColl.find(query).sort(sort).limit(limit).toArray()
+            res.send(result);
         })
         app.get('/study-sessions/detail/:id', async (req, res) => {
             const id = req.params.id;

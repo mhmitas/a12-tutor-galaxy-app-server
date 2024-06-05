@@ -283,11 +283,15 @@ async function run() {
         // get all study session from db
         app.get('/all-sessions', async (req, res) => {
             let limit = 0
+            let query = {}
             let sort = { _id: 1 }
             if (req.query?.limit) {
                 limit = parseInt(req.query.limit);
             }
-            const result = await studySessionColl.find().sort(sort).limit(limit).toArray()
+            if (req.query?.status) {
+                query = { status: req.query.status }
+            }
+            const result = await studySessionColl.find(query).sort(sort).limit(limit).toArray()
             res.send(result)
         })
         // set registration fee and update status

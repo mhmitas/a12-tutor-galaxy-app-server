@@ -340,6 +340,11 @@ async function run() {
             const result = await materialColl.deleteOne(query)
             res.send(result)
         })
+        // get all users
+        app.get('/users', async (req, res) => {
+            const result = await userColl.find().toArray()
+            res.send(result)
+        })
 
         // jwt related APIs
         // generate token when auth stage change

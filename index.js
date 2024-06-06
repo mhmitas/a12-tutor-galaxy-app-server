@@ -218,7 +218,7 @@ async function run() {
             const result = await noteColl.deleteOne(query)
             res.send(result)
         })
-        // get a sessions material by student
+        // get a sessions material by student(shared api by s&t)
         app.get('/materials/session/:id', async (req, res) => {
             const id = req.params.id
             const query = { sessionId: id }
@@ -277,7 +277,7 @@ async function run() {
             res.send(result)
         })
         // update a material in material coll.
-        app.patch('/materials/update/:id', async (req, res) => {
+        app.patch('/materials/update/:id', verifyToken, verifyTutor, async (req, res) => {
             const id = req.params.id;
             const material = req.body;
             const filter = { _id: new ObjectId(id) }
@@ -285,7 +285,7 @@ async function run() {
             const result = await materialColl.updateOne(filter, updateDoc)
             res.send(result)
         })
-        // delete a material from material coll.
+        // delete a material from material coll by tutor.
         app.delete('/materials/delete/:id', async (req, res) => {
             const id = req.params.id
             const result = await materialColl.deleteOne({ _id: new ObjectId(id) })
@@ -346,6 +346,15 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await materialColl.deleteOne(query)
+            res.send(result)
+        })
+        // update a material in material coll.
+        app.patch('/materials/update-by-admin/:id', verifyToken, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const material = req.body;
+            const filter = { _id: new ObjectId(id) }
+            const updateDoc = { $set: { ...material } }
+            const result = await materialColl.updateOne(filter, updateDoc)
             res.send(result)
         })
         // get all users

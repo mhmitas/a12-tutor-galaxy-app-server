@@ -173,8 +173,9 @@ async function run() {
         // get all reviews
         app.get('/reviews/:sessionId', async (req, res) => {
             const sessionId = req.params.sessionId;
-            const query = { sessionId: sessionId }
-            const result = await reviewColl.find(query).toArray()
+            const query = { sessionId: sessionId };
+            const sort = { _id: -1 }
+            const result = await reviewColl.find(query).sort(sort).toArray()
             res.send(result)
         })
         // get notes from db

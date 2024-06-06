@@ -146,7 +146,8 @@ async function run() {
         app.get('/bookings/:email', async (req, res) => {
             const email = req.params?.email;
             const query = { userEmail: email };
-            const result = await bookingColl.find(query).toArray()
+            let sort = { _id: -1 }
+            const result = await bookingColl.find(query).sort(sort).toArray()
             res.send(result)
         })
         // get booked sessions ids

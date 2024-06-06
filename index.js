@@ -174,8 +174,9 @@ async function run() {
         app.get('/reviews/:sessionId', async (req, res) => {
             const sessionId = req.params.sessionId;
             const query = { sessionId: sessionId };
-            const sort = { _id: -1 }
-            const result = await reviewColl.find(query).sort(sort).toArray()
+            let limit = 6
+            let sort = { _id: -1 }
+            const result = await reviewColl.find(query).sort(sort).limit(limit).toArray()
             res.send(result)
         })
         // get notes from db

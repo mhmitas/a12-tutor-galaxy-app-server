@@ -3,6 +3,7 @@ const app = express()
 require('dotenv').config()
 const cors = require('cors')
 const jwt = require('jsonwebtoken')
+const stripe = require('stripe')(process.env.STRIPE_SK)
 const port = process.env.PORT || 5000;
 
 
@@ -366,6 +367,20 @@ async function run() {
             const secret = process.env.JWT_SECRET
             const token = jwt.sign(user, secret, { expiresIn: '1h' })
             res.send({ token })
+        })
+
+        // stripe payment api
+        app.post('/create-payment-intent', async (req, res) => {
+            const price = parseFloat(req.body?.price) * 100
+            // Create a PaymentIntent with the order amount and currency
+            const { client_secret } = await stripe.paymentIntents.create({
+                amount: price,
+                currency: 'usd',
+                automatic_payment_methods: {
+                    enabled: true,
+                },
+            });
+            res.send({ clientSecret: client_secret })
         })
 
         // MUST REMOVE BEFORE DEPLOY

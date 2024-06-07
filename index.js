@@ -26,7 +26,7 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
-        strict: true,
+        strict: false,
         deprecationErrors: true,
     }
 });
@@ -51,6 +51,7 @@ async function run() {
     try {
         const database = client.db('study_platform_db');
         const userColl = database.collection('users');
+        userColl.createIndex({ name: "text", email: "text" })
         const studySessionColl = database.collection('study-sessions')
         const materialColl = database.collection('materials')
         const bookingColl = database.collection('bookings')
@@ -359,6 +360,17 @@ async function run() {
         })
         // get all users
         app.get('/users', async (req, res) => {
+            const searchText = req.query?.searchText;
+            if (searchText && typeof searchText === 'string' && searchText.length > 1) {
+                console.log(searchText)
+                const pipeline = [
+                    { $match: { $text: { $search: searchText } } },
+                    { $sort: { score: { $meta: "textScore" } } },
+                ]
+                // const query = { $text: { $search: searchText } }
+                const result = await userColl.aggregate(pipeline).toArray()
+                return res.send(result)
+            }
             const result = await userColl.find().toArray()
             res.send(result)
         })
@@ -371,6 +383,32 @@ async function run() {
             const result = await userColl.updateOne(query, updateDoc)
             res.send(result)
         })
+        // search user
+        app.get('/search-user', async (req, res) => {
+            const searchText = req.query.searchText;
+            const pipeline = [
+                { $match: { $text: { $search: searchText } } },
+                { $sort: { score: { $meta: "textScore" } } },
+            ]
+            // const query = { $text: { $search: searchText } }
+            const result = await userColl.aggregate(pipeline).toArray()
+            res.send(result)
+        })
+
+        /*
+        {
+            $search: {
+            index: "tutor-galaxy-users",
+            text: {
+                query: "tutor",
+                path: {
+                wildcard: "*"
+                }
+            }
+            }
+        }
+        */
+
 
         // jwt related APIs
         // generate token when auth stage change

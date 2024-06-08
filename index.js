@@ -246,6 +246,16 @@ async function run() {
             const result = await materialColl.find(query).toArray()
             res.send(result)
         })
+        // get classmates
+        app.get('/bookings/all-students/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { sessionId: id }
+            const options = {
+                projection: { userEmail: 1, userName: 1 }
+            }
+            const result = await bookingColl.find(query, options).toArray()
+            res.send(result)
+        })
 
 
         // tutor related APIs -----------

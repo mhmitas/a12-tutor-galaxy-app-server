@@ -112,6 +112,7 @@ async function run() {
         app.get('/study-sessions', async (req, res) => {
             // let query = {};
             let limit = 0
+            if (req.query?.limit) { limit = parseInt(req.query.limit) }
             let sort = { _id: -1 }
             let query = { status: req.query?.status }
             if (req.query?.status) {
@@ -161,9 +162,11 @@ async function run() {
             res.send(result)
         })
         // get booked sessions ids
-        app.get('/bookings/:email', async (req, res) => {
+        app.get('/bookings/:email', verifyToken, verifyStudent, async (req, res) => {
             const email = req.params?.email;
             const query = { userEmail: email };
+            let limit = 0;
+            if (req.query?.limit) { limit = req.query.limit }
             let sort = { _id: -1 }
             const result = await bookingColl.find(query).sort(sort).toArray()
             res.send(result)
@@ -315,7 +318,7 @@ async function run() {
         app.get('/study-sessions/by-admin', async (req, res) => {
             let limit = 0
             let query = {}
-            let sort = { _id: 1 }
+            let sort = { _id: -1 }
             if (req.query?.limit) {
                 limit = parseInt(req.query.limit);
             }
@@ -411,21 +414,6 @@ async function run() {
             const result = await userColl.aggregate(pipeline).toArray()
             res.send(result)
         })
-
-        /*
-        {
-            $search: {
-            index: "tutor-galaxy-users",
-            text: {
-                query: "tutor",
-                path: {
-                wildcard: "*"
-                }
-            }
-            }
-        }
-        */
-
 
         // jwt related APIs
         // generate token when auth stage change

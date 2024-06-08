@@ -112,15 +112,27 @@ async function run() {
         app.get('/study-sessions', async (req, res) => {
             // let query = {};
             let limit = 0
-            let query = {}
             let sort = { _id: -1 }
-            if (req.query?.limit) {
-                limit = parseInt(req.query.limit);
-            }
+            let query = { status: req.query?.status }
             if (req.query?.status) {
                 query = { status: req.query.status }
             }
             const result = await studySessionColl.find(query).sort(sort).limit(limit).toArray()
+            res.send(result);
+        })
+        // get all study sessions 
+        app.get('/all-study-sessions', async (req, res) => {
+            // console.log(req.query)
+            let pageNum = parseInt(req.query.page) || 0;
+            let limit = parseInt(req.query.limit) || 10;
+            let skip = limit * pageNum;
+            let query = { status: req.query?.status }
+            const sort = { _id: -1 }
+            const result = await studySessionColl.find(query)
+                .sort(sort)
+                .skip(skip)
+                .limit(limit)
+                .toArray()
             res.send(result);
         })
         app.get('/study-sessions/detail/:id', async (req, res) => {
@@ -128,6 +140,11 @@ async function run() {
             const query = { _id: new ObjectId(id) }
             const result = await studySessionColl.findOne(query)
             res.send(result)
+        })
+        // get total sessions count
+        app.get('/total-sessions', async (req, res) => {
+            const result = await studySessionColl.countDocuments({ status: 'approved' })
+            res.send({ totalSessions: result })
         })
         app.get('/users/role/:email', async (req, res) => {
             const email = req.params.email;
@@ -295,7 +312,7 @@ async function run() {
 
         // Admin related APIs
         // get all study session from db
-        app.get('/all-sessions', async (req, res) => {
+        app.get('/study-sessions/by-admin', async (req, res) => {
             let limit = 0
             let query = {}
             let sort = { _id: 1 }

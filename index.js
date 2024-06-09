@@ -265,13 +265,16 @@ async function run() {
         })
         // get classmates
         app.get('/bookings/all-students/:id', verifyToken, verifyStudent, async (req, res) => {
-            const id = req.params.id
+            const id = req.params.id;
+            console.log(id)
             const query = { sessionId: id }
-            const options = {
-                projection: { userEmail: 1, userName: 1 }
-            }
+            const options = { projection: { userEmail: 1, _id: 0 } }
             const result = await bookingColl.find(query, options).toArray()
-            res.send(result)
+            // get all emails
+            const emails = result.map(obj => obj.userEmail)
+            const filter = { email: { $in: emails } }
+            const usersResult = await userColl.find(filter).toArray()
+            res.send(usersResult)
         })
 
 

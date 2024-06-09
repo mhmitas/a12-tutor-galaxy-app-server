@@ -278,12 +278,12 @@ async function run() {
         })
 
 
-        // tutor related APIs -----------
+        // tutor: related APIs -----------
         // create study session
         app.get('/study-sessions/tutor/:email', verifyToken, verifyTutor, async (req, res) => {
             const email = req.params?.email;
             let query = { tutor_email: email }
-            if (req.query.status) {
+            if (req.query?.status) {
                 query = { ...query, status: req.query.status }
             }
             const result = await studySessionColl.find(query).toArray()

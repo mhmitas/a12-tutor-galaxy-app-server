@@ -106,6 +106,29 @@ async function run() {
             const result = await userColl.insertOne({ ...user, timeStamp: Date.now() })
             res.send({ result, isExist })
         })
+        // get user : main purpose getting role
+        app.get('/users/role/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const result = await userColl.findOne(query)
+            res.send(result)
+        })
+        // update user profile
+        app.patch('/api/user/update-profile/:email', async (req, res) => {
+            const email = req.params.email
+            const updateUser = req.body
+            const query = { email: email }
+            const updateDoc = {
+                $set: {
+                    name: updateUser?.name,
+                    image: updateUser?.image,
+                    address: updateUser?.address,
+                    phone: updateUser?.phone,
+                }
+            }
+            const result = await userColl.updateOne(query, updateDoc)
+            res.send(result)
+        })
 
         // public APIs + session APIs + others----------
         // get study sessions 
@@ -146,12 +169,6 @@ async function run() {
         app.get('/total-sessions', async (req, res) => {
             const result = await studySessionColl.countDocuments({ status: 'approved' })
             res.send({ totalSessions: result })
-        })
-        app.get('/users/role/:email', async (req, res) => {
-            const email = req.params.email;
-            const query = { email: email }
-            const result = await userColl.findOne(query)
-            res.send(result)
         })
 
         // student related APIs ------------
@@ -239,9 +256,8 @@ async function run() {
             const result = await noteColl.deleteOne(query)
             res.send(result)
         })
-        // some thinking left for this api
-        // get a sessions material by student(shared api by s&t)
-        app.get('/materials/session/:id', verifyToken, async (req, res) => {
+        // get a sessions material by student
+        app.get('/materials/session/:id', verifyToken, verifyStudent, async (req, res) => {
             const id = req.params.id
             const query = { sessionId: id }
             const result = await materialColl.find(query).toArray()
@@ -294,6 +310,13 @@ async function run() {
                 return res.status(405).send({ message: 'Method Not Allowed' })
             }
             const result = await studySessionColl.deleteOne(query)
+            res.send(result)
+        })
+        // get materials
+        app.get('/api/tutor/materials/session/:id', verifyToken, verifyTutor, async (req, res) => {
+            const id = req.params.id
+            const query = { sessionId: id }
+            const result = await materialColl.find(query).toArray()
             res.send(result)
         })
         // upload study materials
@@ -391,7 +414,7 @@ async function run() {
             res.send(result)
         })
         // get all users
-        app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
+        app.get('/api/admin/users', verifyToken, verifyAdmin, async (req, res) => {
             const searchText = req.query?.searchText;
             if (searchText && typeof searchText === 'string' && searchText.length > 1) {
                 console.log(searchText)
@@ -407,7 +430,7 @@ async function run() {
             res.send(result)
         })
         // update a user's role
-        app.patch('/users/update-role/:id', verifyToken, verifyAdmin, async (req, res) => {
+        app.patch('/api/admin/users/update-role/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id
             const updateUser = req.body;
             const query = { _id: new ObjectId(id) }

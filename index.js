@@ -33,7 +33,7 @@ const client = new MongoClient(uri, {
 
 // verify token middleware
 function verifyToken(req, res, next) {
-    const token = req.headers?.authorization.split(' ')[1]
+    const token = req.headers?.authorization?.split(' ')[1]
     if (!token) {
         return res.status(401).send({ message: 'unauthorize access' })
     }
@@ -156,12 +156,12 @@ async function run() {
 
         // student related APIs ------------
         // book a session
-        app.post('/bookings', async (req, res) => {
+        app.post('/bookings', verifyToken, verifyStudent, async (req, res) => {
             const sessionData = req.body;
             const result = await bookingColl.insertOne(sessionData)
             res.send(result)
         })
-        // get booked sessions ids
+        // get booked sessions
         app.get('/bookings/:email', verifyToken, verifyStudent, async (req, res) => {
             const email = req.params?.email;
             const query = { userEmail: email };
@@ -183,7 +183,7 @@ async function run() {
             res.send(ids)
         })
         // post review in db
-        app.put('/reviews', async (req, res) => {
+        app.put('/reviews', verifyToken, verifyStudent, async (req, res) => {
             const review = req.body;
             const query = { sessionId: review.sessionId, userEmail: review.userEmail }
             const updateDoc = { $set: { ...review } }
@@ -191,7 +191,7 @@ async function run() {
             const result = await reviewColl.updateOne(query, updateDoc, options);
             res.send(result)
         })
-        // get all reviews
+        // get all reviews(api for verified users)
         app.get('/reviews/:sessionId', async (req, res) => {
             const sessionId = req.params.sessionId;
             const query = { sessionId: sessionId };
@@ -201,7 +201,7 @@ async function run() {
             res.send(result)
         })
         // get notes from db
-        app.get('/notes/:email', async (req, res) => {
+        app.get('/notes/:email', verifyToken, verifyStudent, async (req, res) => {
             const email = req.params.email;
             const query = { userEmail: email }
             const sort = { _id: -1 }
@@ -223,7 +223,7 @@ async function run() {
             res.send(result)
         })
         // update a note
-        app.patch('/notes/update/:id', async (req, res) => {
+        app.patch('/notes/update/:id', verifyToken, verifyStudent, async (req, res) => {
             const id = req.params.id;
             console.log(id)
             const updateNote = req.body;
@@ -233,21 +233,22 @@ async function run() {
             res.send(result)
         })
         // delete a note
-        app.delete('/notes/:id', async (req, res) => {
+        app.delete('/notes/:id', verifyToken, verifyStudent, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await noteColl.deleteOne(query)
             res.send(result)
         })
+        // some thinking left for this api
         // get a sessions material by student(shared api by s&t)
-        app.get('/materials/session/:id', async (req, res) => {
+        app.get('/materials/session/:id', verifyToken, async (req, res) => {
             const id = req.params.id
             const query = { sessionId: id }
             const result = await materialColl.find(query).toArray()
             res.send(result)
         })
         // get classmates
-        app.get('/bookings/all-students/:id', async (req, res) => {
+        app.get('/bookings/all-students/:id', verifyToken, verifyStudent, async (req, res) => {
             const id = req.params.id
             const query = { sessionId: id }
             const options = {
@@ -269,13 +270,14 @@ async function run() {
             const result = await studySessionColl.find(query).toArray()
             res.send(result)
         })
-        app.post('/study-sessions', async (req, res) => {
+        // post an session to db
+        app.post('/study-sessions', verifyToken, verifyTutor, async (req, res) => {
             const sessionInfo = req.body;
             const result = await studySessionColl.insertOne(sessionInfo)
             res.send(result)
         })
-        // update rejected session status 
-        app.patch('/study-sessions/update/:id', async (req, res) => {
+        // update rejected session's status to pending
+        app.patch('/study-sessions/update/:id', verifyToken, verifyTutor, async (req, res) => {
             const id = req.params.id;
             const updateSession = req.body;
             const query = { _id: new ObjectId(id) }
@@ -284,7 +286,7 @@ async function run() {
             res.send(result)
         })
         // delete a session from session coll.
-        app.delete('/study-sessions/delete/:id', async (req, res) => {
+        app.delete('/study-sessions/delete/:id', verifyToken, verifyTutor, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const checkResult = await studySessionColl.findOne(query, { projection: { status: 1 } })
@@ -295,13 +297,13 @@ async function run() {
             res.send(result)
         })
         // upload study materials
-        app.post('/materials', async (req, res) => {
+        app.post('/materials', verifyToken, verifyTutor, async (req, res) => {
             const materials = req.body
             const result = await materialColl.insertOne(materials)
             res.send(result)
         })
         // get all materials added by tutor
-        app.get('/materials/tutor/:email', async (req, res) => {
+        app.get('/materials/tutor/:email', verifyToken, verifyTutor, async (req, res) => {
             const email = req.params?.email;
             let query = { tutor_email: email }
             const result = await materialColl.find(query).toArray()
@@ -317,7 +319,7 @@ async function run() {
             res.send(result)
         })
         // delete a material from material coll by tutor.
-        app.delete('/materials/delete/:id', async (req, res) => {
+        app.delete('/materials/delete/:id', verifyToken, verifyTutor, async (req, res) => {
             const id = req.params.id
             const result = await materialColl.deleteOne({ _id: new ObjectId(id) })
             res.send(result)
@@ -325,7 +327,7 @@ async function run() {
 
         // Admin related APIs
         // get all study session from db
-        app.get('/study-sessions/by-admin', async (req, res) => {
+        app.get('/study-sessions/by-admin', verifyToken, verifyAdmin, async (req, res) => {
             let limit = 0
             let query = {}
             let sort = { _id: -1 }
@@ -339,7 +341,7 @@ async function run() {
             res.send(result)
         })
         // set registration fee and update status
-        app.patch('/study-sessions/update-by-admin/:id', async (req, res) => {
+        app.patch('/study-sessions/update-by-admin/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const updateSession = req.body;
             const query = { _id: new ObjectId(id) }
@@ -348,7 +350,7 @@ async function run() {
             res.send(result)
         })
         // delete an approved session by admin
-        app.delete('/study-sessions/delete-by-admin/:id', async (req, res) => {
+        app.delete('/study-sessions/delete-by-admin/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const checkResult = await studySessionColl.findOne(query, { projection: { status: 1 } })
@@ -359,7 +361,7 @@ async function run() {
             res.send(result)
         })
         // update an approved session by admin
-        app.patch('/study-session/update-by-admin/:id', async (req, res) => {
+        app.patch('/study-session/update-by-admin/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const updateSession = req.body;
@@ -368,7 +370,7 @@ async function run() {
             res.send(result)
         })
         // get all materials from material collection
-        app.get('/all-materials', async (req, res) => {
+        app.get('/all-materials-admin', async (req, res) => {
             const result = await materialColl.find().toArray()
             res.send(result)
         })
@@ -389,7 +391,7 @@ async function run() {
             res.send(result)
         })
         // get all users
-        app.get('/users', async (req, res) => {
+        app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
             const searchText = req.query?.searchText;
             if (searchText && typeof searchText === 'string' && searchText.length > 1) {
                 console.log(searchText)
@@ -405,7 +407,7 @@ async function run() {
             res.send(result)
         })
         // update a user's role
-        app.patch('/users/update-role/:id', async (req, res) => {
+        app.patch('/users/update-role/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id
             const updateUser = req.body;
             const query = { _id: new ObjectId(id) }
@@ -414,7 +416,7 @@ async function run() {
             res.send(result)
         })
         // search user
-        app.get('/search-user', async (req, res) => {
+        app.get('/search-user', verifyToken, verifyAdmin, async (req, res) => {
             const searchText = req.query.searchText;
             const pipeline = [
                 { $match: { $text: { $search: searchText } } },

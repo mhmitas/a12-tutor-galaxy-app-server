@@ -166,9 +166,9 @@ async function run() {
             const email = req.params?.email;
             const query = { userEmail: email };
             let limit = 0;
-            if (req.query?.limit) { limit = req.query.limit }
+            if (req.query?.limit) { limit = parseInt(req.query.limit) }
             let sort = { _id: -1 }
-            const result = await bookingColl.find(query).sort(sort).toArray()
+            const result = await bookingColl.find(query).limit(limit).sort(sort).toArray()
             res.send(result)
         })
         // get booked sessions ids

@@ -21,6 +21,7 @@ app.get('/', (req, res) => {
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.jt5df8u.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+// const uri = `mongodb://localhost:27017`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -286,15 +287,30 @@ async function run() {
 
 
         // tutor: related APIs -----------
-        // create study session
+        // get tutors sessions
         app.get('/study-sessions/tutor/:email', verifyToken, verifyTutor, async (req, res) => {
             const email = req.params?.email;
             let query = { tutor_email: email }
             if (req.query?.status) {
                 query = { ...query, status: req.query.status }
             }
-            const result = await studySessionColl.find(query).toArray()
+            let limit = 0
+            let skip = 0
+            if (req.query.limit) {
+                limit = parseInt(req.query.limit)
+            }
+            if (req.query.skip) {
+                skip = parseInt(req.query.skip)
+            }
+            const result = await studySessionColl.find(query).limit(limit).skip(skip).sort({ _id: -1 }).toArray()
             res.send(result)
+        })
+        // get total session count
+        app.get('/study-sessions/tutor/count/:email', verifyToken, verifyTutor, async (req, res) => {
+            const email = req.params?.email;
+            const query = { tutor_email: email, status: 'approved' }
+            const total = await studySessionColl.countDocuments(query)
+            res.send({ total })
         })
         // post an session to db
         app.post('/study-sessions', verifyToken, verifyTutor, async (req, res) => {
@@ -308,6 +324,15 @@ async function run() {
             const updateSession = req.body;
             const query = { _id: new ObjectId(id) }
             const updateDoc = { $set: { ...updateSession }, $unset: { rejection_info: '' } }
+            const result = await studySessionColl.updateOne(query, updateDoc)
+            res.send(result)
+        })
+        // update an study session
+        app.patch('/api/tutor/study-sessions/update/:id', verifyToken, verifyTutor, async (req, res) => {
+            const id = req.params.id;
+            const updateSession = req.body;
+            const query = { _id: new ObjectId(id) }
+            const updateDoc = { $set: { ...updateSession } }
             const result = await studySessionColl.updateOne(query, updateDoc)
             res.send(result)
         })
@@ -358,7 +383,7 @@ async function run() {
             res.send(result)
         })
         // get total students
-        app.get('/api/tutor/total-students/:email', async (req, res) => {
+        app.get('/api/tutor/total-students/:email', verifyToken, verifyTutor, async (req, res) => {
             const email = req.params.email;
             const query = { tutor_email: email }
             const options = { projection: { userEmail: 1, _id: 0 } }
@@ -366,7 +391,7 @@ async function run() {
             res.send(result)
         })
         // get average ratings
-        app.get('/api/tutor/ratings/:email', async (req, res) => {
+        app.get('/api/tutor/ratings/:email', verifyToken, verifyTutor, async (req, res) => {
             const email = req.params.email;
             const pipeline = [
                 {
@@ -402,7 +427,7 @@ async function run() {
             res.send(result)
         })
         // get total revenue
-        app.get('/api/tutor/revenue/:email', async (req, res) => {
+        app.get('/api/tutor/revenue/:email', verifyToken, verifyTutor, async (req, res) => {
             const email = req.params.email
             const pipeline = [
                 {

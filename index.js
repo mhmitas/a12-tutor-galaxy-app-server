@@ -170,6 +170,13 @@ async function run() {
             const result = await studySessionColl.countDocuments({ status: 'approved' })
             res.send({ totalSessions: result })
         })
+        // get tutors
+        app.get('/api/home/tutors', async (req, res) => {
+            const query = { role: 'tutor' }
+            const result = await userColl.find(query).toArray()
+            res.send(result)
+        })
+
 
         // student related APIs ------------
         // book a session
@@ -350,6 +357,69 @@ async function run() {
             const result = await materialColl.deleteOne({ _id: new ObjectId(id) })
             res.send(result)
         })
+        // get total students
+        app.get('/api/tutor/total-students/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { tutor_email: email }
+            const options = { projection: { userEmail: 1, _id: 0 } }
+            const result = await bookingColl.find(query, options).toArray()
+            res.send(result)
+        })
+        // get average ratings
+        app.get('/api/tutor/ratings/:email', async (req, res) => {
+            const email = req.params.email;
+            const pipeline = [
+                {
+                    $match: {
+                        tutor_email: email,
+                        status: 'approved',
+                    },
+                },
+                {
+                    $addFields: {
+                        _idString: { $toString: '$_id' }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'reviews',
+                        localField: '_idString',
+                        foreignField: 'sessionId',
+                        as: 'reviews'
+                    }
+                },
+                {
+                    $unwind: '$reviews'
+                },
+                {
+                    $group: {
+                        _id: null,
+                        averageRating: { $avg: '$reviews.rating' }
+                    }
+                }
+            ];
+            const result = await studySessionColl.aggregate(pipeline).toArray()
+            res.send(result)
+        })
+        // get total revenue
+        app.get('/api/tutor/revenue/:email', async (req, res) => {
+            const email = req.params.email
+            const pipeline = [
+                {
+                    $match: {
+                        tutor_email: email,
+                    }
+                },
+                {
+                    $group: { _id: null, totalRevenue: { $sum: '$paymentInfo.amount' } }
+                }
+            ]
+            const result = await bookingColl.aggregate(pipeline).toArray()
+            const totalAmount = result[0].totalRevenue
+            const revenue = totalAmount * 0.7
+            res.send({ revenue })
+        })
+
 
         // Admin related APIs
         // get all study session from db

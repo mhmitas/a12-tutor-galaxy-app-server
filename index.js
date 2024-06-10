@@ -242,7 +242,7 @@ async function run() {
         // get a note for update
         app.get('/notes/detail/:id', async (req, res) => {
             const id = req.params?.id;
-            console.log(id)
+            // console.log(id)
             const query = { _id: new ObjectId(id) }
             const result = await noteColl.findOne(query);
             res.send(result)
@@ -256,7 +256,7 @@ async function run() {
         // update a note
         app.patch('/notes/update/:id', verifyToken, verifyStudent, async (req, res) => {
             const id = req.params.id;
-            console.log(id)
+            // console.log(id)
             const updateNote = req.body;
             const query = { _id: new ObjectId(id) }
             const updateDoc = { $set: { ...updateNote } }
@@ -280,7 +280,7 @@ async function run() {
         // get classmates
         app.get('/bookings/all-students/:id', verifyToken, verifyStudent, async (req, res) => {
             const id = req.params.id;
-            console.log(id)
+            // console.log(id)
             const query = { sessionId: id }
             const options = { projection: { userEmail: 1, _id: 0 } }
             const result = await bookingColl.find(query, options).toArray()
@@ -521,7 +521,7 @@ async function run() {
         app.get('/api/admin/users', verifyToken, verifyAdmin, async (req, res) => {
             const searchText = req.query?.searchText;
             if (searchText && typeof searchText === 'string' && searchText.length > 1) {
-                console.log(searchText)
+                // console.log(searchText)
                 const pipeline = [
                     { $match: { $text: { $search: searchText } } },
                     { $sort: { score: { $meta: "textScore" } } },
@@ -605,8 +605,8 @@ async function run() {
 
         // MUST REMOVE BEFORE DEPLOY
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        // await client.db("admin").command({ ping: 1 });
+        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();

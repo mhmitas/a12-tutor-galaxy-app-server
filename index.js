@@ -58,6 +58,7 @@ async function run() {
         const bookingColl = database.collection('bookings')
         const reviewColl = database.collection('reviews')
         const noteColl = database.collection('notes')
+        const announcementColl = database.collection('announcements')
 
         // role verify middlewares:-----------
         // verify tutor middleware
@@ -175,6 +176,11 @@ async function run() {
         app.get('/api/home/tutors', async (req, res) => {
             const query = { role: 'tutor' }
             const result = await userColl.find(query).toArray()
+            res.send(result)
+        })
+        // get announcements
+        app.get('/announcements', async (req, res) => {
+            const result = await announcementColl.find().sort({ _id: -1 }).toArray()
             res.send(result)
         })
 
@@ -570,6 +576,13 @@ async function run() {
             });
             res.send({ clientSecret: client_secret })
         })
+        // post announcement to db
+        app.post('/api/admin/announcement', verifyToken, verifyAdmin, async (req, res) => {
+            const announcement = req.body
+            const result = await announcementColl.insertOne(announcement)
+            res.send(result)
+        })
+
 
         // MUST REMOVE BEFORE DEPLOY
         // Send a ping to confirm a successful connection

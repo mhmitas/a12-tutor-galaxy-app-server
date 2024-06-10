@@ -553,6 +553,25 @@ async function run() {
             const result = await userColl.aggregate(pipeline).toArray()
             res.send(result)
         })
+        app.get('/api/admin/active-sessions', async (req, res) => {
+            const query = { status: 'approved' }
+            const options = { projection: { _id: 1 } }
+            const result = await studySessionColl.find(query, options).toArray()
+            res.send(result)
+        })
+        app.get('/api/admin/count-tutors', async (req, res) => {
+            const query = { role: 'tutor' }
+            const options = { projection: { email: 1, _id: 0 } }
+            const result = await userColl.find(query, options).toArray()
+            res.send(result)
+        })
+        app.get('/api/admin/count-students', async (req, res) => {
+            const query = { role: 'student' }
+            const options = { projection: { email: 1, _id: 0 } }
+            const result = await userColl.find(query, options).toArray()
+            res.send(result)
+        })
+
 
         // jwt related APIs
         // generate token when auth stage change

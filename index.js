@@ -183,6 +183,15 @@ async function run() {
             const result = await announcementColl.find().sort({ _id: -1 }).toArray()
             res.send(result)
         })
+        // get all reviews(api for verified users)
+        app.get('/reviews/:sessionId', async (req, res) => {
+            const sessionId = req.params.sessionId;
+            const query = { sessionId: sessionId };
+            let limit = 6
+            let sort = { _id: -1 }
+            const result = await reviewColl.find(query).sort(sort).limit(limit).toArray()
+            res.send(result)
+        })
 
 
         // student related APIs ------------
@@ -220,15 +229,6 @@ async function run() {
             const updateDoc = { $set: { ...review } }
             const options = { upsert: true }
             const result = await reviewColl.updateOne(query, updateDoc, options);
-            res.send(result)
-        })
-        // get all reviews(api for verified users)
-        app.get('/reviews/:sessionId', async (req, res) => {
-            const sessionId = req.params.sessionId;
-            const query = { sessionId: sessionId };
-            let limit = 6
-            let sort = { _id: -1 }
-            const result = await reviewColl.find(query).sort(sort).limit(limit).toArray()
             res.send(result)
         })
         // get notes from db
@@ -497,12 +497,12 @@ async function run() {
             res.send(result)
         })
         // get all materials from material collection
-        app.get('/all-materials-admin', async (req, res) => {
+        app.get('/all-materials-admin', verifyToken, verifyAdmin, async (req, res) => {
             const result = await materialColl.find().toArray()
             res.send(result)
         })
         // delete materials by admin
-        app.delete('/material/delete-by-admin/:id', async (req, res) => {
+        app.delete('/material/delete-by-admin/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await materialColl.deleteOne(query)
@@ -553,6 +553,12 @@ async function run() {
             const result = await userColl.aggregate(pipeline).toArray()
             res.send(result)
         })
+        // post announcement to db
+        app.post('/api/admin/announcement', verifyToken, verifyAdmin, async (req, res) => {
+            const announcement = req.body
+            const result = await announcementColl.insertOne(announcement)
+            res.send(result)
+        })
         app.get('/api/admin/active-sessions', async (req, res) => {
             const query = { status: 'approved' }
             const options = { projection: { _id: 1 } }
@@ -595,12 +601,7 @@ async function run() {
             });
             res.send({ clientSecret: client_secret })
         })
-        // post announcement to db
-        app.post('/api/admin/announcement', verifyToken, verifyAdmin, async (req, res) => {
-            const announcement = req.body
-            const result = await announcementColl.insertOne(announcement)
-            res.send(result)
-        })
+
 
 
         // MUST REMOVE BEFORE DEPLOY

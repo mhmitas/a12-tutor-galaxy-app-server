@@ -9,7 +9,7 @@ const port = process.env.PORT || 5000;
 
 // middlewares
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://tutor-galaxy.web.app', 'https://tutor-galaxy.firebaseapp.com']
+    origin: ['http://localhost:5173', 'https://tutor-galaxy.web.app', 'https://tutor-galaxy.firebaseapp.com', 'https://mh-tutorgalaxy.vercel.app']
 }))
 app.use(express.json())
 
